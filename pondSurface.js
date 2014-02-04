@@ -1,4 +1,7 @@
 
+// debug messages
+var DEBUG = false;
+
 // pointer to HTML canvas object
 var canvas, ctx;
 
@@ -6,6 +9,7 @@ var canvas, ctx;
 var canvasTop, canvasLeft;
 
 // canvas has a 4:3 aspect ratio
+// current dimensions = 1024:768
 var NUM_ROWS = 12;
 var NUM_COLS = 16;
 
@@ -15,18 +19,19 @@ var DOT_COLOR = "000";
 
 var dotMatrix = new Array();
 
-// valid options: "lines", "circle"
-var pattern = "circle";
+// valid options: "lines", "circle", "square"
+var pattern = "square";
 
 // pattern variables
 var CIRCLE_MAX_DISPLACEMENT = 300;
 var LINE_DISPLACEMENT = 20;
+var SQUARE_WIDTH = 192;
 
 
 function initPond() {
 
-	console.log("initPond started");
-	
+	debug("initPond started");
+
 	// initialize canvas and its context
 	canvas = document.getElementById("canvas");
 	ctx = canvas.getContext("2d");
@@ -47,7 +52,7 @@ function initPond() {
 
 	canvas.addEventListener("mousemove", canvasMouseMove);
 
-	console.log("initPond complete");
+	debug("initPond complete");
 
 }
 
@@ -95,6 +100,15 @@ function canvasMouseMove(e) {
 
 				dot.move(dot.x0 + (xDiff * (newDistance / distance)) / 10, dot.y0 + (yDiff * (newDistance / distance)) / 10);
 				dot.draw();
+
+			} else if (pattern == "square") {
+
+				xDiff = dot.x0 - mouseX;
+				yDiff = dot.y0 - mouseY;
+
+				if (Math.abs(xDiff) > SQUARE_WIDTH / 2 || Math.abs(yDiff) > SQUARE_WIDTH / 2) {
+					dot.draw();
+				}				
 
 			}
 		}
@@ -173,4 +187,15 @@ function drawLine(x0, y0, x1, y1, color) {
 	ctx.stroke();
 	ctx.closePath();
 
+}
+
+
+  ////////////////////////////////////////////////
+ ///////////////////// DEBUG ////////////////////
+////////////////////////////////////////////////
+
+function debug(message) {
+	if (DEBUG) {
+		console.log(message);
+	}
 }
