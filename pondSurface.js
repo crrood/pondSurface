@@ -15,11 +15,12 @@ var DOT_COLOR = "000";
 
 var dotMatrix = new Array();
 
-// can be "lines", "circle"
+// valid options: "lines", "circle"
 var pattern = "circle";
 
 // pattern variables
-var MAX_DISPLACEMENT_CIRCLE = 300;
+var CIRCLE_MAX_DISPLACEMENT = 300;
+var LINE_DISPLACEMENT = 20;
 
 
 function initPond() {
@@ -54,33 +55,47 @@ function canvasMouseMove(e) {
 	mouseX = e.clientX - canvasLeft;
 	mouseY = e.clientY - canvasTop;
 
+	// clear all the dots
+	for (var x = 1; x < dotMatrix.length; x++) {
+		for (var y = 1; y < dotMatrix[x].length; y++) {
+			dotMatrix[x][y].erase();
+		}
+	}
+
+	// transform them according to set pattern
 	var dot;
 	var distance, xDiff, yDiff;
 	for (var x = 1; x < dotMatrix.length; x++) {
 		for (var y = 1; y < dotMatrix[x].length; y++) {
 			
 			dot = dotMatrix[x][y];
-			dot.reset();
 			if (pattern == "lines") {
+
 				if (dot.x < mouseX) {
-					dot.move(dot.x0 - 20, dot.y0);
+					dot.move(dot.x0 - LINE_DISPLACEMENT, dot.y0);
 				} else {
-					dot.move(dot.x0 + 20, dot.y0);
+					dot.move(dot.x0 + LINE_DISPLACEMENT, dot.y0);
 				}
 
 				if (dot.y < mouseY) {
-					dot.move(dot.x, dot.y0 - 20);
+					dot.move(dot.x, dot.y0 - LINE_DISPLACEMENT);
 				} else {
-					dot.move(dot.x, dot.y0 + 20);
+					dot.move(dot.x, dot.y0 + LINE_DISPLACEMENT);
 				}
+
+				dot.draw();
+
 			} else if (pattern == "circle") {
+
 				xDiff = dot.x0 - mouseX;
 				yDiff = dot.y0 - mouseY;
 
 				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-				newDistance = distance + Math.min(MAX_DISPLACEMENT_CIRCLE, 25000 / distance);
+				newDistance = distance + Math.min(CIRCLE_MAX_DISPLACEMENT, 25000 / distance);
 
 				dot.move(dot.x0 + (xDiff * (newDistance / distance)) / 10, dot.y0 + (yDiff * (newDistance / distance)) / 10);
+				dot.draw();
+
 			}
 		}
 	}
@@ -100,23 +115,27 @@ function Dot(x0, y0, r, color) {
 	this.r = r;
 	this.color = color;
 
-	// render dot
+	// render dot at current location
 	this.draw = function() {
-		drawCircle(x0, y0, r, color);
+		drawCircle(this.x, this.y, this.r, this.color);
 	}
 
-	// erase current dot and move to new coordinates
-	this.move = function(x1, y1) {
-		drawCircle(this.x, this.y, r + 1, "FFF");
-		drawCircle(x1, y1, r, color);
+	// erase dot
+	this.erase = function() {
+		drawCircle(this.x, this.y, this.r + 1, "FFF");
+	}
 
+	// redraw dot at new coordinates
+	this.move = function(x1, y1) {
 		this.x = x1;
 		this.y = y1;
 	}
 
 	// redraw at initial position
 	this.reset = function() {
-		this.move(x0, y0);
+		this.erase();
+		this.move(this.x0, this.y0);
+		this.draw();
 	}
 
 }
