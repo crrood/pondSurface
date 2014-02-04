@@ -1,19 +1,26 @@
 
-
+// pointer to HTML canvas object
 var canvas, ctx;
 
+// x, y coordinates of top left corner of HTML canvas object 
 var canvasTop, canvasLeft;
 
 // canvas has a 4:3 aspect ratio
 var NUM_ROWS = 12;
 var NUM_COLS = 16;
 
+// dot constants
 var DOT_RADIUS = 15;
 var DOT_COLOR = "000";
 
 var dotMatrix = new Array();
 
+// can be "lines", "circle"
 var pattern = "circle";
+
+// pattern variables
+var MAX_DISPLACEMENT_CIRCLE = 300;
+
 
 function initPond() {
 
@@ -44,7 +51,6 @@ function initPond() {
 }
 
 function canvasMouseMove(e) {
-	//console.log("(" + (e.clientX - canvasLeft) + ", " + (e.clientY - canvasTop) + ")");
 	mouseX = e.clientX - canvasLeft;
 	mouseY = e.clientY - canvasTop;
 
@@ -70,9 +76,10 @@ function canvasMouseMove(e) {
 			} else if (pattern == "circle") {
 				xDiff = dot.x0 - mouseX;
 				yDiff = dot.y0 - mouseY;
-				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
-				newDistance = distance + (25000 / distance);
+				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+				newDistance = distance + Math.min(MAX_DISPLACEMENT_CIRCLE, 25000 / distance);
+
 				dot.move(dot.x0 + (xDiff * (newDistance / distance)) / 10, dot.y0 + (yDiff * (newDistance / distance)) / 10);
 			}
 		}
