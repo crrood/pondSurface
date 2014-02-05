@@ -12,6 +12,7 @@ var canvasTop, canvasLeft;
 // current dimensions = 1024:768
 var NUM_ROWS = 12;
 var NUM_COLS = 16;
+var DRAW_BORDERS = true;
 
 // dot constants
 var DOT_RADIUS = 15;
@@ -19,13 +20,13 @@ var DOT_COLOR = "000";
 
 var dotMatrix = new Array();
 
-// valid options: "lines", "circle", "square"
-var pattern = "square";
+// valid options: "lines", "circle", "square", "crosshair"
+var pattern = "crosshair";
 
 // pattern variables
 var CIRCLE_MAX_DISPLACEMENT = 300;
 var LINE_DISPLACEMENT = 20;
-var SQUARE_WIDTH = 192;
+var SQUARE_WIDTH = 3;
 
 
 function initPond() {
@@ -42,9 +43,9 @@ function initPond() {
 	xSpace = canvas.width / NUM_COLS;
 	ySpace = canvas.height / NUM_ROWS;
 
-	for (var x = 1; x < NUM_COLS; x++) {
+	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
 		dotMatrix[x] = new Array();
-		for (var y = 1; y < NUM_ROWS; y++) {
+		for (var y = DRAW_BORDERS ? 0 : 1; y < NUM_ROWS + DRAW_BORDERS ? 1 : 0; y++) {
 			dotMatrix[x][y] = new Dot(x * xSpace, y * ySpace, DOT_RADIUS, DOT_COLOR);
 			dotMatrix[x][y].draw();
 		}
@@ -57,23 +58,30 @@ function initPond() {
 }
 
 function canvasMouseMove(e) {
-	mouseX = e.clientX - canvasLeft;
-	mouseY = e.clientY - canvasTop;
+	mouseX = e.clientX - canvasLeft + document.body.scrollLeft;
+	mouseY = e.clientY - canvasTop + document.body.scrollTop;
 
 	// clear all the dots
-	for (var x = 1; x < dotMatrix.length; x++) {
-		for (var y = 1; y < dotMatrix[x].length; y++) {
+	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
+		for (var y = DRAW_BORDERS ? 0 : 1; y < NUM_ROWS + DRAW_BORDERS ? 1 : 0; y++) {
 			dotMatrix[x][y].erase();
 		}
 	}
 
 	// transform them according to set pattern
 	var dot;
-	var distance, xDiff, yDiff;
-	for (var x = 1; x < dotMatrix.length; x++) {
-		for (var y = 1; y < dotMatrix[x].length; y++) {
+	var distance, xDiff, yDiff, columnWidth, rowHeight;
+	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
+		for (var y = DRAW_BORDERS ? 0 : 1; y < NUM_ROWS + DRAW_BORDERS ? 1 : 0; y++) {
 			
 			dot = dotMatrix[x][y];
+			
+			xDiff = dot.x0 - mouseX;
+			yDiff = dot.y0 - mouseY;
+			
+			rowHeight = canvas.height / NUM_ROWS / 2;
+			columnWidth = canvas.width / NUM_COLS / 2;
+			
 			if (pattern == "lines") {
 
 				if (dot.x < mouseX) {
@@ -92,9 +100,6 @@ function canvasMouseMove(e) {
 
 			} else if (pattern == "circle") {
 
-				xDiff = dot.x0 - mouseX;
-				yDiff = dot.y0 - mouseY;
-
 				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 				newDistance = distance + Math.min(CIRCLE_MAX_DISPLACEMENT, 25000 / distance);
 
@@ -103,13 +108,20 @@ function canvasMouseMove(e) {
 
 			} else if (pattern == "square") {
 
-				xDiff = dot.x0 - mouseX;
-				yDiff = dot.y0 - mouseY;
-
-				if (Math.abs(xDiff) > SQUARE_WIDTH / 2 || Math.abs(yDiff) > SQUARE_WIDTH / 2) {
+				if (Math.abs(xDiff) > (SQUARE_WIDTH * canvas.width / NUM_COLS) / 2 || Math.abs(yDiff) > (SQUARE_WIDTH * canvas.height / NUM_ROWS) / 2) {
 					dot.draw();
-				}				
+				}
 
+			} else if (pattern == "crosshair") {
+				
+				if (Math.abs(xDiff) < columnWidth && Math.abs(yDiff) < rowHeight) {
+					// do nothing
+				} else if (Math.abs(xDiff) < columnWidth || Math.abs(yDiff) < rowHeight) {
+					dot.draw();
+				} else if (Math.abs(xDiff) < columnWidth * 3 && Math.abs(yDiff) < rowHeight * 3) {
+					dot.draw();
+				}
+				
 			}
 		}
 	}
