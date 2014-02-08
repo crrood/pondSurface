@@ -23,7 +23,7 @@ var numRows, numCols;
 var dotMatrix = new Array();
 
 // valid options: "lines", "circle", "square", "crosshair", "rainbow"
-var pattern = "crosshair";
+var pattern = "rainbow";
 
 // pattern variables
 var CIRCLE_MAX_DISPLACEMENT = 300;
@@ -86,7 +86,12 @@ function canvasMouseMove(e) {
 
 	// transform them according to set pattern
 	var dot;
-	var distance, xDiff, yDiff, columnWidth, rowHeight;
+	var distance, xDiff, yDiff;
+	var r, g, b;
+
+	var rowHeight = canvas.height / numRows / 2;
+	var columnWidth = canvas.width / numCols / 2;
+
 	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
 		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
 			
@@ -94,9 +99,6 @@ function canvasMouseMove(e) {
 			
 			xDiff = dot.x0 - mouseX;
 			yDiff = dot.y0 - mouseY;
-			
-			rowHeight = canvas.height / numRows / 2;
-			columnWidth = canvas.width / numCols / 2;
 			
 			switch (pattern) {
 
@@ -141,6 +143,22 @@ function canvasMouseMove(e) {
 					dot.draw();
 				}
 				break;
+
+			case "rainbow":
+
+				// this formula determines the shape of the rainbow
+				i = Math.sqrt(xDiff * xDiff + yDiff * yDiff) / 10;
+
+				// convert iterator to RGB values
+				r = Math.floor(Math.sin(i * Math.PI * 2 / dotMatrix.length) * 127 + 128);
+				g = Math.floor(Math.sin(i * Math.PI * 2 / dotMatrix.length + 2) * 127 + 128);
+				b = Math.floor(Math.sin(i * Math.PI * 2 / dotMatrix.length + 4) * 127 + 128);
+
+				dot.color = "rgb(" + r + "," + g + "," + b + ")";
+				dot.draw();
+
+				break;
+
 			}
 		}
 	}
