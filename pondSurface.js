@@ -11,21 +11,19 @@ var canvas, ctx;
 
 // x, y coordinates of top left corner of HTML canvas object 
 var canvasTop, canvasLeft;
-
-// canvas has a 4:3 aspect ratio
-// current dimensions = 1024:768
-var NUM_ROWS = 12;
-var NUM_COLS = 16;
 var DRAW_BORDERS = true;
 
 // dot constants
+var DOT_SPACING = 60;
 var DOT_RADIUS = 15;
 var DOT_COLOR = "000";
 
+var numRows, numCols;
+
 var dotMatrix = new Array();
 
-// valid options: "lines", "circle", "square", "crosshair"
-var pattern = "circle";
+// valid options: "lines", "circle", "square", "crosshair", "rainbow"
+var pattern = "crosshair";
 
 // pattern variables
 var CIRCLE_MAX_DISPLACEMENT = 300;
@@ -54,14 +52,13 @@ function initPond() {
 		canvas.height = window.innerHeight;
 	}
 
-	// space between dots
-	xSpace = window.innerWidth / NUM_COLS;
-	ySpace = window.innerHeight / NUM_ROWS;
+	numRows = canvas.width / DOT_SPACING;
+	numCols = canvas.width / DOT_SPACING;
 
-	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
+	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
 		dotMatrix[x] = new Array();
-		for (var y = DRAW_BORDERS ? 0 : 1; y < NUM_ROWS + DRAW_BORDERS ? 1 : 0; y++) {
-			dotMatrix[x][y] = new Dot(x * xSpace, y * ySpace, DOT_RADIUS, DOT_COLOR);
+		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
+			dotMatrix[x][y] = new Dot(x * DOT_SPACING, y * DOT_SPACING, DOT_RADIUS, DOT_COLOR);
 			dotMatrix[x][y].draw();
 		}
 	}
@@ -81,8 +78,8 @@ function canvasMouseMove(e) {
 	mouseY = e.clientY - canvasTop + document.body.scrollTop;
 
 	// clear all the dots
-	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
-		for (var y = DRAW_BORDERS ? 0 : 1; y < NUM_ROWS + DRAW_BORDERS ? 1 : 0; y++) {
+	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
+		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
 			dotMatrix[x][y].erase();
 		}
 	}
@@ -90,16 +87,16 @@ function canvasMouseMove(e) {
 	// transform them according to set pattern
 	var dot;
 	var distance, xDiff, yDiff, columnWidth, rowHeight;
-	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
-		for (var y = DRAW_BORDERS ? 0 : 1; y < NUM_ROWS + DRAW_BORDERS ? 1 : 0; y++) {
+	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
+		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
 			
 			dot = dotMatrix[x][y];
 			
 			xDiff = dot.x0 - mouseX;
 			yDiff = dot.y0 - mouseY;
 			
-			rowHeight = canvas.height / NUM_ROWS / 2;
-			columnWidth = canvas.width / NUM_COLS / 2;
+			rowHeight = canvas.height / numRows / 2;
+			columnWidth = canvas.width / numCols / 2;
 			
 			switch (pattern) {
 
@@ -120,6 +117,7 @@ function canvasMouseMove(e) {
 				break;
 
 			case "circle":
+			// more of a bump, really
 
 				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 				newDistance = distance + Math.min(CIRCLE_MAX_DISPLACEMENT, 25000 / distance);
@@ -129,7 +127,7 @@ function canvasMouseMove(e) {
 
 			case "square":
 
-				if (Math.abs(xDiff) > (SQUARE_WIDTH * canvas.width / NUM_COLS) / 2 || Math.abs(yDiff) > (SQUARE_WIDTH * canvas.height / NUM_ROWS) / 2) {
+				if (Math.abs(xDiff) > (SQUARE_WIDTH * canvas.width / numCols) / 2 || Math.abs(yDiff) > (SQUARE_WIDTH * canvas.height / numRows) / 2) {
 					dot.draw();
 				}
 				break;
@@ -138,13 +136,11 @@ function canvasMouseMove(e) {
 				
 				if (Math.abs(xDiff) < columnWidth && Math.abs(yDiff) < rowHeight) {
 					// do nothing
-				} else if (Math.abs(xDiff) < columnWidth || Math.abs(yDiff) < rowHeight) {
-					dot.draw();
-				} else if (Math.abs(xDiff) < columnWidth * 3 && Math.abs(yDiff) < rowHeight * 3) {
+				} else if (Math.abs(xDiff) < columnWidth || Math.abs(yDiff) < rowHeight 
+					|| (Math.abs(xDiff) < columnWidth * 3 && Math.abs(yDiff) < rowHeight * 3)) {
 					dot.draw();
 				}
 				break;
-				
 			}
 		}
 	}
