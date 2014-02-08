@@ -1,4 +1,8 @@
 
+  ////////////////////////////////////////////////
+ //////////////// GLOBAL VARIABLES //////////////
+////////////////////////////////////////////////
+
 // debug messages
 var DEBUG = false;
 
@@ -21,7 +25,7 @@ var DOT_COLOR = "000";
 var dotMatrix = new Array();
 
 // valid options: "lines", "circle", "square", "crosshair"
-var pattern = "crosshair";
+var pattern = "circle";
 
 // pattern variables
 var CIRCLE_MAX_DISPLACEMENT = 300;
@@ -29,6 +33,9 @@ var LINE_DISPLACEMENT = 20;
 var SQUARE_WIDTH = 3;
 
 
+  ////////////////////////////////////////////////
+ /////////////////// INITIALIZE /////////////////
+////////////////////////////////////////////////
 function initPond() {
 
 	debug("initPond started");
@@ -37,11 +44,19 @@ function initPond() {
 	canvas = document.getElementById("canvas");
 	ctx = canvas.getContext("2d");
 
-	canvasTop = canvas.style.top.match(/\d*/)[0];
-	canvasLeft = canvas.style.left.match(/\d*/)[0];
+	// get top / left coordinate of canvas to adjust for in mouseMove method
+	canvasTop = canvas.style.top.match(/\d*/)[0] == "" ? 0 : canvas.style.left.match(/\d*/)[0];
+	canvasLeft = canvas.style.left.match(/\d*/)[0] == "" ? 0 : canvas.style.left.match(/\d*/)[0];
 
-	xSpace = canvas.width / NUM_COLS;
-	ySpace = canvas.height / NUM_ROWS;
+	// set canvas.width for relative canvas (ie 100%)
+	if (canvas.style.width.match(/%/) != null) {
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+	}
+
+	// space between dots
+	xSpace = window.innerWidth / NUM_COLS;
+	ySpace = window.innerHeight / NUM_ROWS;
 
 	for (var x = DRAW_BORDERS ? 0 : 1; x < NUM_COLS + DRAW_BORDERS ? 1 : 0; x++) {
 		dotMatrix[x] = new Array();
@@ -57,6 +72,10 @@ function initPond() {
 
 }
 
+
+  ////////////////////////////////////////////////
+ /////////////// MAIN PROGRAM LOOP //////////////
+////////////////////////////////////////////////
 function canvasMouseMove(e) {
 	mouseX = e.clientX - canvasLeft + document.body.scrollLeft;
 	mouseY = e.clientY - canvasTop + document.body.scrollTop;
@@ -82,8 +101,9 @@ function canvasMouseMove(e) {
 			rowHeight = canvas.height / NUM_ROWS / 2;
 			columnWidth = canvas.width / NUM_COLS / 2;
 			
-			if (pattern == "lines") {
+			switch (pattern) {
 
+			case "lines":
 				if (dot.x < mouseX) {
 					dot.move(dot.x0 - LINE_DISPLACEMENT, dot.y0);
 				} else {
@@ -97,8 +117,9 @@ function canvasMouseMove(e) {
 				}
 
 				dot.draw();
+				break;
 
-			} else if (pattern == "circle") {
+			case "circle":
 
 				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 				newDistance = distance + Math.min(CIRCLE_MAX_DISPLACEMENT, 25000 / distance);
@@ -106,13 +127,14 @@ function canvasMouseMove(e) {
 				dot.move(dot.x0 + (xDiff * (newDistance / distance)) / 10, dot.y0 + (yDiff * (newDistance / distance)) / 10);
 				dot.draw();
 
-			} else if (pattern == "square") {
+			case "square":
 
 				if (Math.abs(xDiff) > (SQUARE_WIDTH * canvas.width / NUM_COLS) / 2 || Math.abs(yDiff) > (SQUARE_WIDTH * canvas.height / NUM_ROWS) / 2) {
 					dot.draw();
 				}
+				break;
 
-			} else if (pattern == "crosshair") {
+			case "crosshair":
 				
 				if (Math.abs(xDiff) < columnWidth && Math.abs(yDiff) < rowHeight) {
 					// do nothing
@@ -121,12 +143,17 @@ function canvasMouseMove(e) {
 				} else if (Math.abs(xDiff) < columnWidth * 3 && Math.abs(yDiff) < rowHeight * 3) {
 					dot.draw();
 				}
+				break;
 				
 			}
 		}
 	}
 }
 
+
+  ////////////////////////////////////////////////
+ //////////////////// CLASSES ///////////////////
+////////////////////////////////////////////////
 // class to store data / methods for dots
 function Dot(x0, y0, r, color) {
 	
