@@ -29,6 +29,7 @@ var pattern = "rainbow";
 var CIRCLE_MAX_DISPLACEMENT = 300;
 var LINE_DISPLACEMENT = 20;
 var SQUARE_WIDTH = 3;
+var RAINBOW_WAVELENGTH = 25;
 
 
   ////////////////////////////////////////////////
@@ -43,16 +44,18 @@ function initPond() {
 	ctx = canvas.getContext("2d");
 
 	// get top / left coordinate of canvas to adjust for in mouseMove method
+	// regular expression checks if the coordinates were already set in html
 	canvasTop = canvas.style.top.match(/\d*/)[0] == "" ? 0 : canvas.style.left.match(/\d*/)[0];
 	canvasLeft = canvas.style.left.match(/\d*/)[0] == "" ? 0 : canvas.style.left.match(/\d*/)[0];
 
 	// set canvas.width for relative canvas (ie 100%)
 	if (canvas.style.width.match(/%/) != null) {
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
+		// regular expression to eliminate "%" character
+		canvas.width = window.innerWidth * (canvas.style.width.match(/.*[^%]/) / 100);
+		canvas.height = window.innerHeight * (canvas.style.height.match(/.*[^%]/) / 100);
 	}
 
-	numRows = canvas.width / DOT_SPACING;
+	numRows = canvas.height / DOT_SPACING;
 	numCols = canvas.width / DOT_SPACING;
 
 	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
@@ -147,7 +150,8 @@ function canvasMouseMove(e) {
 			case "rainbow":
 
 				// this formula determines the shape of the rainbow
-				i = Math.sqrt(xDiff * xDiff + yDiff * yDiff) / 10;
+				// larger denominator = longer wavelength
+				i = Math.sqrt(xDiff * xDiff + yDiff * yDiff) / RAINBOW_WAVELENGTH;
 
 				// convert iterator to RGB values
 				r = Math.floor(Math.sin(i * Math.PI * 2 / dotMatrix.length) * 127 + 128);
