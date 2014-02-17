@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////
 
 // debug messages
-var DEBUG = true;
+var DEBUG = false;
 
 // pointer to HTML canvas object
 var canvas, ctx;
