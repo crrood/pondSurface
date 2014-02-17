@@ -4,32 +4,45 @@
 ////////////////////////////////////////////////
 
 // debug messages
-var DEBUG = false;
+var DEBUG = true;
 
 // pointer to HTML canvas object
 var canvas, ctx;
 
 // x, y coordinates of top left corner of HTML canvas object 
 var canvasTop, canvasLeft;
-var DRAW_BORDERS = true;
 
-// dot constants
-var DOT_SPACING = 60;
-var DOT_RADIUS = 15;
-var DOT_COLOR = "000";
-
+// 2d array to hold individual dot state
+var dotMatrix = new Array();
 var numRows, numCols;
 
-var dotMatrix = new Array();
+// global variables
+var Globals = {
 
-// valid options: "lines", "circle", "square", "crosshair", "rainbow"
-var pattern = "rainbow";
+	// contours of base matrix
+	dotSpacing : 60,
+	dotRadius : 17,
+	dotColor : "000",
+	drawBorders : true,
+	
+	// valid options: "line", "hill", "square", "crosshair", "rainbow"
+	pattern : "rainbow",
+	
+	// rainbow variables
+	rainbowWavelength : 25,
 
-// pattern variables
-var CIRCLE_MAX_DISPLACEMENT = 300;
-var LINE_DISPLACEMENT = 20;
-var SQUARE_WIDTH = 3;
-var RAINBOW_WAVELENGTH = 25;
+	// square variables
+	squareWidth : 5,
+
+	// hill variables
+	hillMaxDisplacement : 300,
+	hillWidth : 25000,
+	hillHeight : 10,
+	
+	// line variables
+	lineDisplacement : 50
+
+};
 
 
   ////////////////////////////////////////////////
@@ -55,23 +68,49 @@ function initPond() {
 		canvas.height = window.innerHeight * (canvas.style.height.match(/.*[^%]/) / 100);
 	}
 
-	numRows = canvas.height / DOT_SPACING;
-	numCols = canvas.width / DOT_SPACING;
+	numRows = canvas.height / Globals["dotSpacing"];
+	numCols = canvas.width / Globals["dotSpacing"];
 
-	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
+	// render dot matrix
+	for (var x = Globals["drawBorders"] ? 0 : 1; x < numCols + Globals["drawBorders"] ? 1 : 0; x++) {
 		dotMatrix[x] = new Array();
-		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
-			dotMatrix[x][y] = new Dot(x * DOT_SPACING, y * DOT_SPACING, DOT_RADIUS, DOT_COLOR);
+		for (var y = Globals["drawBorders"] ? 0 : 1; y < numRows + Globals["drawBorders"] ? 1 : 0; y++) {
+			dotMatrix[x][y] = new Dot(x * Globals["dotSpacing"], y * Globals["dotSpacing"], Globals["dotRadius"], Globals["dotColor"]);
 			dotMatrix[x][y].draw();
 		}
 	}
 
+	// detect mouse movement and react patterns
 	canvas.addEventListener("mousemove", canvasMouseMove);
 
 	debug("initPond complete");
 
 }
 
+
+  ////////////////////////////////////////////////
+ ///////////////// HTML INTERFACE ///////////////
+////////////////////////////////////////////////
+
+function setPattern(newPattern) {
+	// clear all the dots
+	for (var x = Globals["drawBorders"] ? 0 : 1; x < numCols + Globals["drawBorders"] ? 1 : 0; x++) {
+		for (var y = Globals["drawBorders"] ? 0 : 1; y < numRows + Globals["drawBorders"] ? 1 : 0; y++) {
+			dotMatrix[x][y].reset();
+		}
+	}
+
+	Globals["pattern"] = newPattern;
+}
+
+function setParameter(parameter, value) {
+	Globals[parameter] = value;
+	debug(parameter + " changed to " + Globals[parameter]);
+}
+
+function getParameter(parameter) {
+	return Globals[parameter];
+}
 
   ////////////////////////////////////////////////
  /////////////// MAIN PROGRAM LOOP //////////////
@@ -81,8 +120,8 @@ function canvasMouseMove(e) {
 	mouseY = e.clientY - canvasTop + document.body.scrollTop;
 
 	// clear all the dots
-	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
-		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
+	for (var x = Globals["drawBorders"] ? 0 : 1; x < numCols + Globals["drawBorders"] ? 1 : 0; x++) {
+		for (var y = Globals["drawBorders"] ? 0 : 1; y < numRows + Globals["drawBorders"] ? 1 : 0; y++) {
 			dotMatrix[x][y].erase();
 		}
 	}
@@ -95,44 +134,44 @@ function canvasMouseMove(e) {
 	var rowHeight = canvas.height / numRows / 2;
 	var columnWidth = canvas.width / numCols / 2;
 
-	for (var x = DRAW_BORDERS ? 0 : 1; x < numCols + DRAW_BORDERS ? 1 : 0; x++) {
-		for (var y = DRAW_BORDERS ? 0 : 1; y < numRows + DRAW_BORDERS ? 1 : 0; y++) {
+	for (var x = Globals["drawBorders"] ? 0 : 1; x < numCols + Globals["drawBorders"] ? 1 : 0; x++) {
+		for (var y = Globals["drawBorders"] ? 0 : 1; y < numRows + Globals["drawBorders"] ? 1 : 0; y++) {
 			
 			dot = dotMatrix[x][y];
 			
 			xDiff = dot.x0 - mouseX;
 			yDiff = dot.y0 - mouseY;
 			
-			switch (pattern) {
+			switch (Globals["pattern"]) {
 
-			case "lines":
+			case "line":
+
 				if (dot.x < mouseX) {
-					dot.move(dot.x0 - LINE_DISPLACEMENT, dot.y0);
+					dot.move(dot.x0 - Globals["lineDisplacement"], dot.y0);
 				} else {
-					dot.move(dot.x0 + LINE_DISPLACEMENT, dot.y0);
+					dot.move(dot.x0 + Number(Globals["lineDisplacement"]), dot.y0);
 				}
 
 				if (dot.y < mouseY) {
-					dot.move(dot.x, dot.y0 - LINE_DISPLACEMENT);
+					dot.move(dot.x, dot.y0 - Globals["lineDisplacement"]);
 				} else {
-					dot.move(dot.x, dot.y0 + LINE_DISPLACEMENT);
+					dot.move(dot.x, dot.y0 + Number(Globals["lineDisplacement"]));
 				}
 
 				dot.draw();
 				break;
 
-			case "circle":
-			// more of a bump, really
+			case "hill":
 
 				distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-				newDistance = distance + Math.min(CIRCLE_MAX_DISPLACEMENT, 25000 / distance);
+				newDistance = distance + Math.min(Globals["hillMaxDisplacement"], Globals["hillWidth"] / distance);
 
-				dot.move(dot.x0 + (xDiff * (newDistance / distance)) / 10, dot.y0 + (yDiff * (newDistance / distance)) / 10);
+				dot.move(dot.x0 + (xDiff * (newDistance / distance)) / Globals["hillHeight"], dot.y0 + (yDiff * (newDistance / distance)) / Globals["hillHeight"]);
 				dot.draw();
 
 			case "square":
 
-				if (Math.abs(xDiff) > (SQUARE_WIDTH * canvas.width / numCols) / 2 || Math.abs(yDiff) > (SQUARE_WIDTH * canvas.height / numRows) / 2) {
+				if (Math.abs(xDiff) > (Globals["squareWidth"] * canvas.width / numCols) / 2 || Math.abs(yDiff) > (Globals["squareWidth"] * canvas.height / numRows) / 2) {
 					dot.draw();
 				}
 				break;
@@ -151,7 +190,7 @@ function canvasMouseMove(e) {
 
 				// this formula determines the shape of the rainbow
 				// larger denominator = longer wavelength
-				i = Math.sqrt(xDiff * xDiff + yDiff * yDiff) / RAINBOW_WAVELENGTH;
+				i = Math.sqrt(xDiff * xDiff + yDiff * yDiff) / Globals["rainbowWavelength"];
 
 				// convert iterator to RGB values
 				r = Math.floor(Math.sin(i * Math.PI * 2 / dotMatrix.length) * 127 + 128);
@@ -202,10 +241,11 @@ function Dot(x0, y0, r, color) {
 		this.y = y1;
 	}
 
-	// redraw at initial position
+	// redraw at initial position in black
 	this.reset = function() {
 		this.erase();
 		this.move(this.x0, this.y0);
+		this.color = Globals["dotColor"];
 		this.draw();
 	}
 

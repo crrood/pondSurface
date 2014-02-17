@@ -1,7 +1,96 @@
 <script type="text/javascript" src="pondSurface.js"></script>
 
-<body onload="initPond();">
+<body onload="initPond(); initControls();">
 
 	<canvas id="canvas" style="solid #000000; position: absolute; width: 99%; height: 99%;">canvas not supported</canvas>
+	<div id="controls">
+		
+		<select id="patternSelect">
+			<option value="rainbow">Rainbow</option>
+			<option value="line">Line</option>
+			<option value="hill">Hill</option>
+			<option value="square">Square</option>
+			<option value="crosshair">Crosshair</option>
+		</select>
+		<br><br>
+
+		<div class="sub-options" id="rainbowOptions">
+			<div class="option-label">Wavelength</div>
+			<input class="parameter" type="range" id="rainbowWavelength" min="10" max="40" step="1"></input>
+		</div>
+
+		<div class="sub-options" id="lineOptions">
+			<div class="option-label">Displacement</div>
+			<input class="parameter" type="range" min="1" max="75" step="1" id="lineDisplacement"></input>
+		</div>
+
+		<div class="sub-options" id="hillOptions">
+			<div class="option-label">Max Displacement</div>
+			<input class="parameter" type="range" min="50" max="1000" step="10" id="hillMaxDisplacement"></input>
+			<div class="option-label">Width</div>
+			<input class="parameter" type="range" min="10000" max="250000" step="500" id="hillWidth"></input>
+			<div class="option-label">Height</div>
+			<input class="parameter" type="range" min="1" max="25" step="1" id="hillHeight"></input>
+		</div>
+
+		<div class="sub-options" id="squareOptions">
+			<div class="option-label">Width</div>
+			<input class="parameter" type="text" id="squareWidth"></input>
+		</div>
+
+	</div>
 
 </body>
+
+<script>
+
+function initControls() {
+	document.getElementById("patternSelect").addEventListener("change", patternSelectChange);
+
+	var parameters = document.getElementsByClassName("parameter");
+	for (var i = 0; i < parameters.length; i++) {
+		parameters[i].addEventListener("change", parameterChanged);
+		parameters[i].value = getParameter(parameters[i].id);
+	}
+
+	hideAllSuboptions();
+	showSuboption(document.getElementById("patternSelect").value);
+}
+
+function patternSelectChange(e) {
+	setPattern(e.target.value);
+	
+	hideAllSuboptions();
+	showSuboption(e.target.value);
+}
+
+function hideAllSuboptions() {
+	var subOptions = document.getElementsByClassName("sub-options");
+	for (var i = 0; i < subOptions.length; i++) {
+		subOptions[i].style.display = "none";
+	}
+}
+
+function showSuboption(pattern) {
+	document.getElementById(pattern + "Options").style.display = "inline";
+}
+
+function parameterChanged(e) {
+	// rainbowWavelength should be logarithmic
+	setParameter(e.target.id, e.target.value);
+}
+
+</script>
+
+<style>
+
+#controls {
+	position: absolute;
+	right: 5%;
+	top: 20%;
+	background-color: #FFF;
+	font-size: 20px;
+	padding: 10px;
+}
+
+</style>
